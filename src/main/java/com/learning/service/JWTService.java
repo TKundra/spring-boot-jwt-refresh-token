@@ -16,7 +16,7 @@ import java.util.function.Function;
 
 @Component
 public class JWTService {
-    public static final String SECRET = "5367566B59%*!@23F452^^482B4D625hjh&j655468576D5A71347437";
+    public static final String SECRET = "5367566B5923F452482B4D625hjhKj655468576D5A71347437";
 
     private Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);

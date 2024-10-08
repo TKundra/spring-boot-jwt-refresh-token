@@ -3,6 +3,7 @@ package com.learning.config;
 import com.learning.entryPoint.JWTAuthEntryPoint;
 import com.learning.filter.JWTAuthFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,10 +35,19 @@ public class SecurityConfig {
     );
 
     @Autowired
-    private JWTAuthFilter jwtAuthFilter;
+    private JWTAuthEntryPoint authEntryPoint;
+
+    // @Autowired
+    // private JWTAuthFilter jwtAuthFilter;
 
     @Autowired
-    private JWTAuthEntryPoint authEntryPoint;
+    @Qualifier("handlerExceptionResolver") // Specify the exact bean name
+    private HandlerExceptionResolver exceptionResolver;
+
+    @Bean
+    public JWTAuthFilter jwtAuthFilter(){
+        return new JWTAuthFilter(exceptionResolver);
+    }
 
     @Bean
     public UserDetailsService userDetailsService() {
@@ -64,7 +75,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(authEntryPoint))
+//                .exceptionHandling(exception -> exception.authenticationEntryPoint(authEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(UNSECURED_URLS.toArray(String[]::new))
@@ -73,7 +84,7 @@ public class SecurityConfig {
                         .authenticated()
                 );
         http.authenticationProvider(daoAuthenticationProvider());
-        http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(jwtAuthFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }
